@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 180" font-family="Segoe UI, Arial, sans-serif">
+  <style>
+    .lbl { fill:#333; font-size:14px; font-weight:bold; text-anchor:middle; }
+    .cap { fill:#667eea; font-size:12px; text-anchor:middle; }
+  </style>
+
+  <!-- s orbital: esfera -->
+  <g transform="translate(70,70)">
+    <circle cx="0" cy="0" r="42" fill="#3b82f6" opacity="0.35" stroke="#3b82f6" stroke-width="2"/>
+    <text class="lbl" y="65">s</text>
+    <text class="cap" y="82">até 2 e⁻ · esférico</text>
+  </g>
+
+  <!-- p orbital: halteres (3 orientações simplificadas em uma) -->
+  <g transform="translate(230,70)">
+    <ellipse cx="-28" cy="0" rx="24" ry="12" fill="#10b981" opacity="0.4" stroke="#10b981" stroke-width="2"/>
+    <ellipse cx="28" cy="0" rx="24" ry="12" fill="#10b981" opacity="0.4" stroke="#10b981" stroke-width="2"/>
+    <line x1="-52" y1="0" x2="52" y2="0" stroke="#10b981" stroke-width="1" stroke-dasharray="2,2"/>
+    <text class="lbl" y="65">p</text>
+    <text class="cap" y="82">até 6 e⁻ · 3 orbitais (halteres)</text>
+  </g>
+
+  <!-- d orbital: quatro lóbulos (trevo) -->
+  <g transform="translate(400,70)">
+    <ellipse cx="0" cy="-26" rx="12" ry="20" fill="#f59e0b" opacity="0.4" stroke="#f59e0b" stroke-width="2"/>
+    <ellipse cx="0" cy="26" rx="12" ry="20" fill="#f59e0b" opacity="0.4" stroke="#f59e0b" stroke-width="2"/>
+    <ellipse cx="-26" cy="0" rx="20" ry="12" fill="#f59e0b" opacity="0.4" stroke="#f59e0b" stroke-width="2"/>
+    <ellipse cx="26" cy="0" rx="20" ry="12" fill="#f59e0b" opacity="0.4" stroke="#f59e0b" stroke-width="2"/>
+    <text class="lbl" y="65">d</text>
+    <text class="cap" y="82">até 10 e⁻ · 5 orbitais (trevo)</text>
+  </g>
+
+  <!-- f orbital: forma complexa simplificada -->
+  <g transform="translate(560,70)">
+    <ellipse cx="0" cy="-30" rx="10" ry="16" fill="#ef4444" opacity="0.4" stroke="#ef4444" stroke-width="2" transform="rotate(0 0 -30)"/>
+    <ellipse cx="21" cy="-21" rx="10" ry="16" fill="#ef4444" opacity="0.4" stroke="#ef4444" stroke-width="2" transform="rotate(45 21 -21)"/>
+    <ellipse cx="30" cy="0" rx="10" ry="16" fill="#ef4444" opacity="0.4" stroke="#ef4444" stroke-width="2" transform="rotate(90 30 0)"/>
+    <ellipse cx="21" cy="21" rx="10" ry="16" fill="#ef4444" opacity="0.4" stroke="#ef4444" stroke-width="2" transform="rotate(135 21 21)"/>
+    <ellipse cx="0" cy="30" rx="10" ry="16" fill="#ef4444" opacity="0.4" stroke="#ef4444" stroke-width="2" transform="rotate(180 0 30)"/>
+    <ellipse cx="-21" cy="21" rx="10" ry="16" fill="#ef4444" opacity="0.4" stroke="#ef4444" stroke-width="2" transform="rotate(225 -21 21)"/>
+    <ellipse cx="-30" cy="0" rx="10" ry="16" fill="#ef4444" opacity="0.4" stroke="#ef4444" stroke-width="2" transform="rotate(270 -30 0)"/>
+    <ellipse cx="-21" cy="-21" rx="10" ry="16" fill="#ef4444" opacity="0.4" stroke="#ef4444" stroke-width="2" transform="rotate(315 -21 -21)"/>
+    <text class="lbl" y="65">f</text>
+    <text class="cap" y="82">até 14 e⁻ · 7 orbitais (complexo)</text>
+  </g>
+</svg>

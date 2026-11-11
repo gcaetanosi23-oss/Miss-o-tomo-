@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 260" font-family="Segoe UI, Arial, sans-serif">
+  <style>
+    .title { fill:#333; font-size:15px; font-weight:bold; text-anchor:middle; }
+    .sub { fill:#555; font-size:12px; text-anchor:middle; }
+    .box { stroke:#888; stroke-width:1.5; fill:white; }
+    .arrow { stroke:#1e3a8a; stroke-width:2; }
+    .lbl2 { fill:#333; font-size:11px; text-anchor:middle; }
+  </style>
+
+  <!-- CROMO -->
+  <text class="title" x="150" y="20">Cromo (Z=24)</text>
+
+  <text class="sub" x="150" y="40">❌ Previsto: 4s² 3d⁴</text>
+  <g transform="translate(60,50)">
+    <rect class="box" x="0" y="0" width="26" height="26"/>
+    <line class="arrow" x1="8" y1="22" x2="8" y2="4"/>
+    <line class="arrow" x1="18" y1="4" x2="18" y2="22"/>
+    <text class="lbl2" x="13" y="40">4s²</text>
+    <g transform="translate(40,0)">
+      <rect class="box" x="0" y="0" width="26" height="26"/><rect class="box" x="30" y="0" width="26" height="26"/>
+      <rect class="box" x="60" y="0" width="26" height="26"/><rect class="box" x="90" y="0" width="26" height="26"/><rect class="box" x="120" y="0" width="26" height="26"/>
+      <line class="arrow" x1="8" y1="22" x2="8" y2="4"/>
+      <line class="arrow" x1="38" y1="22" x2="38" y2="4"/>
+      <line class="arrow" x1="68" y1="22" x2="68" y2="4"/>
+      <line class="arrow" x1="98" y1="22" x2="98" y2="4"/>
+      <text class="lbl2" x="73" y="40">3d⁴ (4 elétrons, incompleto)</text>
+    </g>
+  </g>
+
+  <text class="sub" x="150" y="115">✅ Real: 4s¹ 3d⁵ (mais estável)</text>
+  <g transform="translate(60,125)">
+    <rect class="box" x="0" y="0" width="26" height="26"/>
+    <line class="arrow" x1="13" y1="22" x2="13" y2="4"/>
+    <text class="lbl2" x="13" y="40">4s¹</text>
+    <g transform="translate(40,0)">
+      <rect class="box" x="0" y="0" width="26" height="26"/><rect class="box" x="30" y="0" width="26" height="26"/>
+      <rect class="box" x="60" y="0" width="26" height="26"/><rect class="box" x="90" y="0" width="26" height="26"/><rect class="box" x="120" y="0" width="26" height="26"/>
+      <line class="arrow" x1="8" y1="22" x2="8" y2="4"/>
+      <line class="arrow" x1="38" y1="22" x2="38" y2="4"/>
+      <line class="arrow" x1="68" y1="22" x2="68" y2="4"/>
+      <line class="arrow" x1="98" y1="22" x2="98" y2="4"/>
+      <line class="arrow" x1="128" y1="22" x2="128" y2="4"/>
+      <text class="lbl2" x="73" y="40">3d⁵ (semipreenchido, 1 e⁻ por orbital)</text>
+    </g>
+  </g>
+
+  <!-- COBRE -->
+  <text class="title" x="480" y="180">Cobre (Z=29)</text>
+  <text class="sub" x="480" y="200">❌ Previsto: 4s² 3d⁹ &#160;&#160; ✅ Real: 4s¹ 3d¹⁰</text>
+  <text class="lbl2" x="480" y="222">3d completo (10 e⁻) é mais simétrico e estável</text>
+  <text class="lbl2" x="480" y="240">do que deixar o 4s com 2 elétrons.</text>
+
+  <line x1="20" y1="165" x2="600" y2="165" stroke="#ccc" stroke-dasharray="4,3"/>
+</svg>

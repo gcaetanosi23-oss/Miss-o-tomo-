@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#172554"><title>Painel do Professor | Missão Átomo</title>
+  <link rel="stylesheet" href="teacher.css">
+</head>
+<body>
+  <header class="topbar"><a href="index.html" class="brand">⚛️ Missão Átomo</a><span>Área do Professor</span></header>
+  <main class="wrap">
+    <section id="loginPanel" class="panel login-panel">
+      <div class="orb">⚛️</div><p class="eyebrow">ACESSO RESTRITO</p><h1>Entre com sua conta GitHub</h1>
+      <p class="muted">A autenticação identifica sua conta. Somente usuários incluídos na lista de professores autorizados poderão acessar este painel.</p>
+      <button id="loginButton" class="primary">Continuar com GitHub</button>
+      <div id="deviceInstructions" class="device" hidden>
+        <p>Você será redirecionado ao GitHub para autorizar o acesso básico ao seu perfil. Depois, retornará automaticamente a esta página.</p>
+      </div>
+      <p id="loginStatus" class="status" role="status"></p>
+      <a href="index.html" class="back">← Voltar ao jogo</a>
+    </section>
+
+    <section id="dashboard" hidden>
+      <div class="welcome"><div><p class="eyebrow">PAINEL PEDAGÓGICO</p><h1>Olá, <span id="teacherName">professor</span>!</h1><p class="muted">Resumo dos dados de progresso registrados neste navegador.</p></div><img id="avatar" alt="Avatar GitHub"></div>
+      <div class="notice"><strong>Importante:</strong> os dados dos jogos ficam no armazenamento local do navegador. Este painel não recebe automaticamente os resultados dos dispositivos dos alunos. O login GitHub não sincroniza nem envia esses dados.</div>
+      <div class="stats">
+        <article class="stat"><span>Perfis com progresso</span><strong id="profilesCount">0</strong></article>
+        <article class="stat"><span>Pontuação acumulada</span><strong id="pointsTotal">0</strong></article>
+        <article class="stat"><span>Melhor sequência</span><strong id="bestStreak">0</strong></article>
+        <article class="stat"><span>Maior mundo alcançado</span><strong id="bestWorld">1/5</strong></article>
+      </div>
+      <section class="panel"><div class="section-head"><div><p class="eyebrow">ACOMPANHAMENTO</p><h2>Perfis de aprendizagem</h2></div><button id="refreshButton" class="secondary">Atualizar</button></div>
+        <div class="table-scroll"><table><thead><tr><th>Perfil</th><th>Quiz – Bloco A</th><th>Orbitais Quest</th><th>Total</th></tr></thead><tbody id="profilesTable"></tbody></table></div>
+        <p id="emptyState" class="muted" hidden>Nenhum progresso registrado neste navegador. Os dados aparecerão quando os jogos forem utilizados.</p>
+        <div class="actions"><button id="exportButton" class="primary">Exportar relatório CSV</button><button id="logoutButton" class="secondary">Sair</button></div>
+      </section>
+      <p class="footnote">Missão Átomo • Painel local do professor • <span id="githubLogin"></span></p>
+    </section>
+  </main>
+  <script src="auth-config.js"></script><script src="auth.js"></script><script src="storage.js"></script><script src="teacher.js"></script>
+</body></html>

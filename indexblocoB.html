@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbitais Quest - Distribuição Eletrônica</title>
+    <link rel="stylesheet" href="styleblocoB.css">
+</head>
+<body>
+    <div class="game-container">
+        <section id="saveMenu" class="save-menu">
+            <header class="game-header">
+                <a href="index.html" style="display:inline-block; margin-bottom:10px; color:#667eea; text-decoration:underline; font-size:0.9em;">← Voltar ao Menu Principal</a>
+                <h1>Orbitais Quest</h1>
+                <p>Escolha um slot para carregar ou iniciar novo jogo</p>
+            </header>
+            <div id="slotsContainer" class="slots-container">
+                </div>
+        </section>
+
+        <div id="gameContent" style="display: none;">
+            <header class="game-header">
+                <h1>Orbitais Quest</h1>
+                <div class="stats">
+                    <span>Pontos: <span id="score">0</span></span>
+                    <span>Mundo: <span id="currentWorld">1</span>/5</span>
+                    <span>Streak: <span id="streak">0</span></span>
+                </div>
+                <button id="btnVoltarMenu" class="btn-secondary" style="margin-top:10px; padding: 5px 15px; font-size: 0.8em;">Trocar de Save</button>
+            </header>
+
+            <section class="world-map" id="worldMap">
+                <div class="worlds-container">
+                    <div class="world world-1 unlocked" data-world="1">
+                        <div class="world-icon">1️⃣ s,p,d,f</div>
+                        <div class="world-title">Subníveis</div>
+                    </div>
+                    <div class="world world-2 locked" data-world="2">
+                        <div class="world-icon">2️⃣ n+l</div>
+                        <div class="world-title">Energia</div>
+                    </div>
+                    <div class="world world-3 locked" data-world="3">
+                        <div class="world-icon">3️⃣ 🔨</div>
+                        <div class="world-title">Construção</div>
+                    </div>
+                    <div class="world world-4 locked" data-world="4">
+                        <div class="world-icon">4️⃣ ⚠️</div>
+                        <div class="world-title">Desafios</div>
+                    </div>
+                    <div class="world world-5 locked" data-world="5">
+                        <div class="world-icon">5️⃣ ⭐</div>
+                        <div class="world-title">Exceções</div>
+                    </div>
+                   <div id="diagramMode" style="display: none; text-align: center;">
+    <div class="element-challenge">
+        <h3>Distribua os elétrons do: <span id="targetElement" style="color: #ffeb3b; font-size: 1.5em;">Ferro (Z=26)</span></h3>
+        <p>Restantes: <span id="electronsLeft">26</span></p>
+    </div>
+    
+    <div class="pauling-grid" id="paulingGrid">
+        </div>
+
+    <div class="user-sequence" id="userSequence" style="margin-top: 20px; min-height: 40px; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 10px;">
+        <strong>Sua distribuição:</strong> <span id="currentSequenceText"></span>
+    </div>
+</div>
+                </div>
+            </section>
+            <section id="worldIntro" class="world-intro" style="display: none;">
+    <div class="intro-content">
+        <h2 id="introTitle">Título do Mundo</h2>
+        <div class="intro-text" id="introText">
+            </div>
+        <button id="startGameBtn" class="btn-primary">Entendido, começar perguntas!</button>
+        <button id="backToMapFromIntro" class="btn-secondary">Voltar ao Mapa</button>
+    </div>
+</section>
+
+            <main class="game-main" id="gameMain" style="display: none;">
+                <div class="game-controls">
+                    <button id="backToMap" class="btn-secondary">← Mapa de Mundos</button>
+                </div>
+                <div class="question-area">
+                    <div class="question-number" id="questionNumber">Pergunta 1/8</div>
+                    <div class="question-text" id="questionText"></div>
+                </div>
+                <div class="options-container" id="optionsContainer"></div>
+                <div class="feedback-area" id="feedbackArea" style="display: none;">
+                    <div id="feedbackText"></div>
+                    <button id="nextQuestion" class="btn-primary full-width">Próxima Pergunta</button>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </main>
+
+            <section class="world-complete" id="worldComplete" style="display: none;">
+                <div class="complete-content">
+                    <h2>🎉 Mundo Concluído!</h2>
+                    <p id="worldCompleteText"></p>
+                    <div class="complete-stats">
+                        <span>Acertos: <span id="worldCorrect">0</span></span>
+                        <span>Pontos: <span id="worldScore">0</span></span>
+                    </div>
+                    <button id="continueWorld" class="btn-primary">Continuar</button>
+                    <button id="replayWorld" class="btn-secondary">Rejogar</button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="storage.js"></script>
+<script src="gameblocoB.js"></script>
+</body>
+</html>
