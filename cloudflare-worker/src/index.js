@@ -192,6 +192,7 @@ async function handleApi(request, env, cors, url) {
       let body;
       try { body = await readJson(request, 10000); }
       catch (e) { return json({ error: e.message === "PAYLOAD_TOO_LARGE" ? "Requisição muito grande." : "JSON inválido." }, 400, cors); }
+      if (!body || typeof body !== "object" || Array.isArray(body)) return json({ error: "JSON inválido." }, 400, cors);
       const sets = [], values = [];
       if (body.name !== undefined) {
         if (!validText(body.name, 100, true)) return json({ error: "Nome inválido." }, 400, cors);
@@ -227,11 +228,12 @@ async function handleApi(request, env, cors, url) {
     let body;
     try { body = await readJson(request, 30000); }
     catch (e) { return json({ error: e.message === "PAYLOAD_TOO_LARGE" ? "Requisição muito grande." : "JSON inválido." }, 400, cors); }
+    if (!body || typeof body !== "object" || Array.isArray(body)) return json({ error: "JSON inválido." }, 400, cors);
     const types = ["multiple_choice", "true_false", "short_answer"];
     const difficulties = ["easy", "medium", "hard"];
     const statuses = ["draft", "published", "archived"];
     if (!validText(body?.title, 160, true) || !validText(body?.statement_md, 12000, true) ||
-        !types.includes(body?.question_type) || body.correct_answer === undefined ||
+        !types.includes(body?.question_type) || body?.correct_answer === undefined ||
         (body.options !== undefined && (!Array.isArray(body.options) || body.options.length > 10)) ||
         (body.explanation_md != null && !validText(body.explanation_md, 8000)) ||
         (body.topic != null && !validText(body.topic, 120)) ||
@@ -257,6 +259,7 @@ async function handleApi(request, env, cors, url) {
       let body;
       try { body = await readJson(request, 30000); }
       catch (e) { return json({ error: e.message === "PAYLOAD_TOO_LARGE" ? "Requisição muito grande." : "JSON inválido." }, 400, cors); }
+      if (!body || typeof body !== "object" || Array.isArray(body)) return json({ error: "JSON inválido." }, 400, cors);
       const allowed = {
         title: v => validText(v, 160, true),
         statement_md: v => validText(v, 12000, true),
