@@ -1,0 +1,14 @@
+name = "missao-atomo-auth"
+main = "src/index.js"
+compatibility_date = "2026-11-09"
+
+[vars]
+ALLOWED_ORIGIN = "https://gcaetanosi23-oss.github.io"
+REDIRECT_URI = "https://gcaetanosi23-oss.github.io/Miss-o-tomo-/oauth-callback.html"
+GITHUB_CLIENT_ID = "Ov23li5LFYBbeK5N3cjJ"
+ALLOWED_TEACHERS = "gcaetanosi23-oss"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "missao-atomo-db"
+database_id = "c1719846-ce28-4d05-b5f5-c39c4d03b87c"
