@@ -103,7 +103,7 @@
     const token = sessionStorage.getItem(SESSION_KEY);
     try {
       if (token && CONFIG.workerUrl) {
-        await fetch(`${CONFIG.workerUrl.replace(/\\/$/, "")}/logout`, {
+        await fetch(`${CONFIG.workerUrl.replace(/\/$/, "")}/logout`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
         });
