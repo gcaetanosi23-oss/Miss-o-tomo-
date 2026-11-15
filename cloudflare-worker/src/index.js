@@ -66,6 +66,52 @@ function validText(value, max, required = false) {
   return typeof value === "string" && value.length <= max && (!required || value.trim().length > 0);
 }
 
+// Formato canônico das respostas:
+// multiple_choice: options = 2..10 textos; correct_answer = índice (base zero).
+// true_false: options = []; correct_answer = boolean.
+// short_answer: options = []; correct_answer = texto ou lista de textos aceitos.
+function validateQuestionData(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return "Dados da questão inválidos.";
+  const types = ["multiple_choice", "true_false", "short_answer"];
+  const difficulties = ["easy", "medium", "hard"];
+  const statuses = ["draft", "published", "archived"];
+
+  if (!validText(data.title, 160, true) ||
+      !validText(data.statement_md, 12000, true) ||
+      !types.includes(data.question_type) ||
+      !validText(data.subject, 80, true) ||
+      (data.topic !== null && !validText(data.topic, 120)) ||
+      (data.explanation_md !== null && !validText(data.explanation_md, 8000)) ||
+      !difficulties.includes(data.difficulty) ||
+      !statuses.includes(data.status)) {
+    return "Revise título, enunciado, disciplina, tópico, explicação e classificações.";
+  }
+
+  if (!Array.isArray(data.options) || data.options.length > 10 ||
+      !data.options.every(option => validText(option, 500, true))) {
+    return "As alternativas devem ser textos de até 500 caracteres.";
+  }
+
+  if (data.question_type === "multiple_choice") {
+    if (data.options.length < 2 || new Set(data.options.map(v => v.trim().toLocaleLowerCase())).size !== data.options.length ||
+        !Number.isInteger(data.correct_answer) ||
+        data.correct_answer < 0 || data.correct_answer >= data.options.length) {
+      return "Múltipla escolha exige de 2 a 10 alternativas diferentes e resposta correta pelo índice (começando em zero).";
+    }
+  } else if (data.question_type === "true_false") {
+    if (data.options.length !== 0 || typeof data.correct_answer !== "boolean") {
+      return "Verdadeiro ou falso exige resposta correta booleana e nenhuma alternativa personalizada.";
+    }
+  } else {
+    const answers = Array.isArray(data.correct_answer) ? data.correct_answer : [data.correct_answer];
+    if (data.options.length !== 0 || answers.length < 1 || answers.length > 10 ||
+        !answers.every(answer => validText(answer, 2000, true))) {
+      return "Resposta curta exige um texto ou uma lista de até 10 respostas aceitas, cada uma com até 2000 caracteres.";
+    }
+  }
+  return null;
+}
+
 async function readJson(request, maxBytes = 50000) {
   const length = Number(request.headers.get("Content-Length") || 0);
   if (length > maxBytes) throw new Error("PAYLOAD_TOO_LARGE");
@@ -147,6 +193,8 @@ async function exchange(request, env, cors) {
   }
 }
 
+// O Markdown é armazenado como texto. A interface deve renderizá-lo com
+// sanitização HTML (incluindo atributos/eventos e URLs), sem executar HTML arbitrário.
 async function handleApi(request, env, cors, url) {
   const teacher = await requireTeacher(request, env);
   if (!teacher) return json({ error: "Sessão inválida ou expirada. Entre novamente." }, 401, cors);
@@ -229,26 +277,29 @@ async function handleApi(request, env, cors, url) {
     try { body = await readJson(request, 30000); }
     catch (e) { return json({ error: e.message === "PAYLOAD_TOO_LARGE" ? "Requisição muito grande." : "JSON inválido." }, 400, cors); }
     if (!body || typeof body !== "object" || Array.isArray(body)) return json({ error: "JSON inválido." }, 400, cors);
-    const types = ["multiple_choice", "true_false", "short_answer"];
-    const difficulties = ["easy", "medium", "hard"];
-    const statuses = ["draft", "published", "archived"];
-    if (!validText(body?.title, 160, true) || !validText(body?.statement_md, 12000, true) ||
-        !types.includes(body?.question_type) || body?.correct_answer === undefined ||
-        (body.options !== undefined && (!Array.isArray(body.options) || body.options.length > 10)) ||
-        (body.explanation_md != null && !validText(body.explanation_md, 8000)) ||
-        (body.topic != null && !validText(body.topic, 120)) ||
-        (body.difficulty !== undefined && !difficulties.includes(body.difficulty)) ||
-        (body.status !== undefined && !statuses.includes(body.status))) {
-      return json({ error: "Dados da questão inválidos. Revise título, enunciado, tipo, alternativas e resposta correta." }, 400, cors);
-    }
+    const question = {
+      title: body.title,
+      statement_md: body.statement_md,
+      question_type: body.question_type,
+      options: body.options === undefined ? [] : body.options,
+      correct_answer: body.correct_answer,
+      explanation_md: body.explanation_md ?? null,
+      subject: body.subject === undefined ? "Química" : body.subject,
+      topic: body.topic ?? null,
+      difficulty: body.difficulty === undefined ? "medium" : body.difficulty,
+      status: body.status === undefined ? "draft" : body.status
+    };
+    const validationError = validateQuestionData(question);
+    if (validationError) return json({ error: validationError }, 400, cors);
+    question.options = question.options.map(option => option.trim());
     const id = crypto.randomUUID();
     await env.DB.prepare(
       "INSERT INTO questions (id, teacher_github_id, title, statement_md, question_type, options_json, correct_answer_json, explanation_md, subject, topic, difficulty, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     ).bind(
-      id, String(teacher.sub), body.title.trim(), body.statement_md, body.question_type,
-      JSON.stringify(body.options || []), JSON.stringify(body.correct_answer),
-      body.explanation_md || null, validText(body.subject, 80, true) ? body.subject.trim() : "Química",
-      body.topic?.trim() || null, body.difficulty || "medium", body.status || "draft"
+      id, String(teacher.sub), question.title.trim(), question.statement_md, question.question_type,
+      JSON.stringify(question.options), JSON.stringify(question.correct_answer),
+      question.explanation_md?.trim() || null, question.subject.trim(),
+      question.topic?.trim() || null, question.difficulty, question.status
     ).run();
     return json({ question: { id, title: body.title.trim(), status: body.status || "draft" } }, 201, cors);
   }
@@ -260,29 +311,63 @@ async function handleApi(request, env, cors, url) {
       try { body = await readJson(request, 30000); }
       catch (e) { return json({ error: e.message === "PAYLOAD_TOO_LARGE" ? "Requisição muito grande." : "JSON inválido." }, 400, cors); }
       if (!body || typeof body !== "object" || Array.isArray(body)) return json({ error: "JSON inválido." }, 400, cors);
-      const allowed = {
-        title: v => validText(v, 160, true),
-        statement_md: v => validText(v, 12000, true),
-        question_type: v => ["multiple_choice", "true_false", "short_answer"].includes(v),
-        explanation_md: v => v === null || validText(v, 8000),
-        subject: v => validText(v, 80, true),
-        topic: v => v === null || validText(v, 120),
-        difficulty: v => ["easy", "medium", "hard"].includes(v),
-        status: v => ["draft", "published", "archived"].includes(v)
+      const allowedFields = new Set([
+        "title", "statement_md", "question_type", "explanation_md", "subject",
+        "topic", "difficulty", "status", "options", "correct_answer"
+      ]);
+      if (Object.keys(body).some(key => !allowedFields.has(key))) {
+        return json({ error: "A atualização contém campos não permitidos." }, 400, cors);
+      }
+      if (!Object.keys(body).length) return json({ error: "Nenhum campo informado para atualizar." }, 400, cors);
+
+      const current = await env.DB.prepare(
+        "SELECT title, statement_md, question_type, options_json, correct_answer_json, explanation_md, subject, topic, difficulty, status FROM questions WHERE id = ? AND teacher_github_id = ?"
+      ).bind(id, String(teacher.sub)).first();
+      if (!current) return json({ error: "Questão não encontrada." }, 404, cors);
+
+      let currentOptions, currentAnswer;
+      try {
+        currentOptions = JSON.parse(current.options_json || "[]");
+        currentAnswer = JSON.parse(current.correct_answer_json);
+      } catch {
+        return json({ error: "Os dados atuais da questão precisam ser revisados antes da edição." }, 409, cors);
+      }
+
+      const question = {
+        title: body.title !== undefined ? body.title : current.title,
+        statement_md: body.statement_md !== undefined ? body.statement_md : current.statement_md,
+        question_type: body.question_type !== undefined ? body.question_type : current.question_type,
+        options: body.options !== undefined ? body.options : currentOptions,
+        correct_answer: body.correct_answer !== undefined ? body.correct_answer : currentAnswer,
+        explanation_md: body.explanation_md !== undefined ? body.explanation_md : current.explanation_md,
+        subject: body.subject !== undefined ? body.subject : current.subject,
+        topic: body.topic !== undefined ? body.topic : current.topic,
+        difficulty: body.difficulty !== undefined ? body.difficulty : current.difficulty,
+        status: body.status !== undefined ? body.status : current.status
       };
+      const validationError = validateQuestionData(question);
+      if (validationError) return json({ error: validationError }, 400, cors);
+
       const sets = [], values = [];
-      for (const [key, validate] of Object.entries(allowed)) {
-        if (body[key] !== undefined) {
-          if (!validate(body[key])) return json({ error: "Campo inválido: " + key }, 400, cors);
-          sets.push(key + " = ?"); values.push(typeof body[key] === "string" ? body[key].trim() : body[key]);
+      const columnMap = {
+        title: "title", statement_md: "statement_md", question_type: "question_type",
+        explanation_md: "explanation_md", subject: "subject", topic: "topic",
+        difficulty: "difficulty", status: "status"
+      };
+      for (const [field, column] of Object.entries(columnMap)) {
+        if (body[field] !== undefined) {
+          const value = body[field];
+          sets.push(column + " = ?");
+          values.push(typeof value === "string" ? value.trim() : value);
         }
       }
-      if (body.options !== undefined) {
-        if (!Array.isArray(body.options) || body.options.length > 10) return json({ error: "Alternativas inválidas." }, 400, cors);
-        sets.push("options_json = ?"); values.push(JSON.stringify(body.options));
+      if (body.options !== undefined || body.question_type !== undefined) {
+        sets.push("options_json = ?");
+        values.push(JSON.stringify(question.options.map(option => option.trim())));
       }
       if (body.correct_answer !== undefined) {
-        sets.push("correct_answer_json = ?"); values.push(JSON.stringify(body.correct_answer));
+        sets.push("correct_answer_json = ?");
+        values.push(JSON.stringify(question.correct_answer));
       }
       if (!sets.length) return json({ error: "Nenhum campo válido para atualizar." }, 400, cors);
       sets.push("updated_at = datetime('now')");
