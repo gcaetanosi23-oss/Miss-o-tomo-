@@ -70,7 +70,7 @@
     finally { loginButton.disabled = false; loginButton.textContent = "Entrar com GitHub"; }
   });
   $("refreshButton").addEventListener("click", render);
-  $("logoutButton").addEventListener("click", () => { MissaoAuth.logout(); location.reload(); });
+  $("logoutButton").addEventListener("click", async () => { await MissaoAuth.logout(); location.reload(); });
   $("exportButton").addEventListener("click", () => {
     const rows = readProfiles();
     const csv = [ ["Perfil","Quiz Bloco A (pontos)","Orbitais Quest (pontos)","Mundo","Melhor sequência","Total"], ...rows.map(x => [x.name,x.a?.points || 0,x.b?.score || 0,x.world,x.streak,x.total]) ]
