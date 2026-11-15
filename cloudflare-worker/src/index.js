@@ -72,6 +72,7 @@ async function verifyToken(token, secret) {
 
     if (typeof payload.sub !== "string" || !payload.sub.trim() || payload.sub.length > 100 ||
         typeof payload.login !== "string" || !/^[a-z0-9-]{1,39}$/i.test(payload.login) ||
+        typeof payload.jti !== "string" || !/^[0-9a-f-]{36}$/i.test(payload.jti) ||
         !Number.isSafeInteger(payload.iat) || !Number.isSafeInteger(payload.exp) ||
         payload.iat > now + clockSkewSeconds ||
         payload.exp <= now ||
@@ -167,8 +168,13 @@ async function requireTeacher(request, env) {
   const match = header.match(/^Bearer\s+(.+)$/i);
   if (!match) return null;
   const session = await verifyToken(match[1], env.SESSION_SIGNING_SECRET);
-  if (!session || !session.sub || !session.login) return null;
+  if (!session || !session.sub || !session.login || !session.jti || !env.DB) return null;
   if (!allowedTeachers(env).includes(String(session.login).toLowerCase())) return null;
+  const now = Math.floor(Date.now() / 1000);
+  const revoked = await env.DB.prepare(
+    "SELECT 1 AS revoked FROM revoked_sessions WHERE jti = ? AND expires_at > ?"
+  ).bind(session.jti, now).first();
+  if (revoked) return null;
   return session;
 }
 
@@ -218,7 +224,8 @@ async function exchange(request, env, cors) {
     const now = Math.floor(Date.now() / 1000);
     const session_token = await issueToken({
       sub: String(profile.id), login, name: profile.name || profile.login,
-      avatar_url: profile.avatar_url || null, iat: now, exp: now + 14400
+      avatar_url: profile.avatar_url || null, jti: crypto.randomUUID(),
+      iat: now, exp: now + 14400
     }, env.SESSION_SIGNING_SECRET);
 
     return json({
@@ -441,13 +448,32 @@ export default {
     if (url.pathname === "/oauth/exchange" && request.method === "POST") {
       return exchange(request, env, cors);
     }
+    if (url.pathname === "/logout" && request.method === "POST") {
+      const header = request.headers.get("Authorization") || "";
+      const token = header.match(/^Bearer\\s+(.+)$/i)?.[1];
+      const session = await verifyToken(token, env.SESSION_SIGNING_SECRET);
+      if (!session || !env.DB || !allowedTeachers(env).includes(String(session.login).toLowerCase())) {
+        return json({ error: "Sessão inválida ou expirada." }, 401, cors);
+      }
+      const now = Math.floor(Date.now() / 1000);
+      await env.DB.prepare("DELETE FROM revoked_sessions WHERE expires_at <= ?").bind(now).run();
+      await env.DB.prepare(
+        "INSERT OR IGNORE INTO revoked_sessions (jti, teacher_github_id, expires_at) VALUES (?, ?, ?)"
+      ).bind(session.jti, String(session.sub), session.exp).run();
+      return json({ success: true }, 200, cors);
+    }
     if (url.pathname === "/session" && request.method === "GET") {
       const header = request.headers.get("Authorization") || "";
       const token = header.match(/^Bearer\s+(.+)$/i)?.[1];
       const session = await verifyToken(token, env.SESSION_SIGNING_SECRET);
-      if (!session || !allowedTeachers(env).includes(String(session.login).toLowerCase())) {
+      if (!session || !env.DB || !allowedTeachers(env).includes(String(session.login).toLowerCase())) {
         return json({ authenticated: false }, 401, cors);
       }
+      const now = Math.floor(Date.now() / 1000);
+      const revoked = await env.DB.prepare(
+        "SELECT 1 AS revoked FROM revoked_sessions WHERE jti = ? AND expires_at > ?"
+      ).bind(session.jti, now).first();
+      if (revoked) return json({ authenticated: false }, 401, cors);
       return json({
         authenticated: true,
         user: { id: String(session.sub), login: session.login, name: session.name, avatar_url: session.avatar_url || null }
