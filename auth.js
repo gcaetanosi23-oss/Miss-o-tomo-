@@ -89,33 +89,59 @@
     try {
       const cached = JSON.parse(rawUser);
       if (!cached.authenticatedAt || Date.now() - cached.authenticatedAt > SESSION_MAX_AGE) {
-        await logout(); return null;
+        await logout();
+        return null;
       }
       const response = await fetch(`${CONFIG.workerUrl.replace(/\/$/, "")}/session`, {
         headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.user) { await logout(); return null; }
+      if (!response.ok || !data.user) {
+        if (response.status === 401) {
+          await clearLocalSession();
+          return null;
+        }
+        throw new Error("Não foi possível validar a sessão com o servidor. Tente novamente.");
+      }
       return data.user;
-    } catch (_) { await logout(); return null; }
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        await clearLocalSession();
+        return null;
+      }
+      throw error;
+    }
+  }
+  function clearLocalSession() {
+    sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_USER_KEY);
+    sessionStorage.removeItem(STATE_KEY);
+    sessionStorage.removeItem(VERIFIER_KEY);
   }
   async function logout() {
     const token = sessionStorage.getItem(SESSION_KEY);
-    try {
-      if (token && CONFIG.workerUrl) {
-        await fetch(`${CONFIG.workerUrl.replace(/\/$/, "")}/logout`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
-        });
-      }
-    } catch (_) {
-      // A limpeza local deve ocorrer mesmo quando o Worker estiver indisponível.
-    } finally {
-      sessionStorage.removeItem(SESSION_KEY);
-      sessionStorage.removeItem(SESSION_USER_KEY);
-      sessionStorage.removeItem(STATE_KEY);
-      sessionStorage.removeItem(VERIFIER_KEY);
+    if (!token) {
+      clearLocalSession();
+      return true;
     }
+    if (!CONFIG.workerUrl) {
+      throw new Error("Não foi possível contatar o serviço de autenticação. Sua sessão foi mantida; tente sair novamente.");
+    }
+    let response;
+    try {
+      response = await fetch(`${CONFIG.workerUrl.replace(/\/$/, "")}/logout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
+      });
+    } catch (_) {
+      throw new Error("Falha de conexão ao encerrar a sessão. Sua sessão foi mantida; verifique a conexão e tente novamente.");
+    }
+    // HTTP 401 significa que o token já está inválido, expirado ou revogado.
+    if (!response.ok && response.status !== 401) {
+      throw new Error(`O servidor não confirmou o encerramento da sessão (HTTP ${response.status}). Sua sessão foi mantida; tente novamente.`);
+    }
+    clearLocalSession();
+    return true;
   }
   window.MissaoAuth = { login, completeCallback, currentUser, logout };
 })();
