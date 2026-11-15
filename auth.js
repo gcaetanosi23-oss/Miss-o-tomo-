@@ -89,21 +89,33 @@
     try {
       const cached = JSON.parse(rawUser);
       if (!cached.authenticatedAt || Date.now() - cached.authenticatedAt > SESSION_MAX_AGE) {
-        logout(); return null;
+        await logout(); return null;
       }
       const response = await fetch(`${CONFIG.workerUrl.replace(/\/$/, "")}/session`, {
         headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.user) { logout(); return null; }
+      if (!response.ok || !data.user) { await logout(); return null; }
       return data.user;
-    } catch (_) { logout(); return null; }
+    } catch (_) { await logout(); return null; }
   }
-  function logout() {
-    sessionStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem(SESSION_USER_KEY);
-    sessionStorage.removeItem(STATE_KEY);
-    sessionStorage.removeItem(VERIFIER_KEY);
+  async function logout() {
+    const token = sessionStorage.getItem(SESSION_KEY);
+    try {
+      if (token && CONFIG.workerUrl) {
+        await fetch(`${CONFIG.workerUrl.replace(/\\/$/, "")}/logout`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
+        });
+      }
+    } catch (_) {
+      // A limpeza local deve ocorrer mesmo quando o Worker estiver indisponível.
+    } finally {
+      sessionStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(SESSION_USER_KEY);
+      sessionStorage.removeItem(STATE_KEY);
+      sessionStorage.removeItem(VERIFIER_KEY);
+    }
   }
   window.MissaoAuth = { login, completeCallback, currentUser, logout };
 })();
