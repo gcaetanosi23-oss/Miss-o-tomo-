@@ -15,10 +15,41 @@
   function render() {
     const rows = readProfiles(), active = rows.filter(x => x.active);
     $("profilesCount").textContent = active.length;
-    $("pointsTotal").textContent = number(rows.reduce((s,x) => s + x.total, 0));
-    $("bestStreak").textContent = Math.max(0,...rows.map(x => x.streak));
-    $("bestWorld").textContent = `${Math.max(1,...rows.map(x => x.world))}/5`;
-    $("profilesTable").innerHTML = rows.map(x => `<tr><td><strong>${x.name}</strong></td><td>${x.a ? `${number(x.a.points)} pts · sequência ${x.a.streak || 0}` : "—"}</td><td>${x.b ? `${number(x.b.score)} pts · mundo ${x.b.currentWorld || 1}` : "—"}</td><td><strong>${number(x.total)} pts</strong></td></tr>`).join("");
+    $("pointsTotal").textContent = number(rows.reduce((s, x) => s + Number(x.total || 0), 0));
+    $("bestStreak").textContent = Math.max(0, ...rows.map(x => Number(x.streak) || 0));
+    $("bestWorld").textContent = `${Math.max(1, ...rows.map(x => Number(x.world) || 1))}/5`;
+
+    // Os dados de progresso vêm do armazenamento local e não são confiáveis.
+    // Criar os elementos e preencher textContent evita interpretar esses dados como HTML.
+    const tableBody = $("profilesTable");
+    const fragment = document.createDocumentFragment();
+
+    function addCell(row, value, emphasize = false) {
+      const cell = document.createElement("td");
+      if (emphasize) {
+        const strong = document.createElement("strong");
+        strong.textContent = String(value);
+        cell.appendChild(strong);
+      } else {
+        cell.textContent = String(value);
+      }
+      row.appendChild(cell);
+    }
+
+    rows.forEach(profile => {
+      const row = document.createElement("tr");
+      addCell(row, profile.name, true);
+      addCell(row, profile.a
+        ? `${number(profile.a.points)} pts · sequência ${Number(profile.a.streak) || 0}`
+        : "—");
+      addCell(row, profile.b
+        ? `${number(profile.b.score)} pts · mundo ${Number(profile.b.currentWorld) || 1}`
+        : "—");
+      addCell(row, `${number(profile.total)} pts`, true);
+      fragment.appendChild(row);
+    });
+
+    tableBody.replaceChildren(fragment);
     $("emptyState").hidden = active.length > 0;
   }
   function showDashboard(user) {
