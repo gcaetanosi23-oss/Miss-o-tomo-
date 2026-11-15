@@ -35,14 +35,51 @@ async function sign(value, secret) {
 }
 
 async function verifyToken(token, secret) {
-  if (!token || !secret || token.length > 4096) return null;
+  if (typeof token !== "string" || !token || typeof secret !== "string" || !secret || token.length > 4096) return null;
+
   const parts = token.split(".");
-  if (parts.length !== 2) return null;
-  const expected = await sign(parts[0], secret);
-  if (expected !== parts[1]) return null;
+  if (parts.length !== 2 || !/^[A-Za-z0-9_-]+$/.test(parts[0]) || !/^[A-Za-z0-9_-]+$/.test(parts[1])) return null;
+
   try {
-    const payload = JSON.parse(atob(parts[0].replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - parts[0].length % 4) % 4)));
-    if (!payload.sub || !payload.exp || payload.exp <= Math.floor(Date.now() / 1000)) return null;
+    const decodeBase64Url = value => {
+      const base64 = value.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - value.length % 4) % 4);
+      const binary = atob(base64);
+      return Uint8Array.from(binary, char => char.charCodeAt(0));
+    };
+
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+    const signatureValid = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      decodeBase64Url(parts[1]),
+      new TextEncoder().encode(parts[0])
+    );
+    if (!signatureValid) return null;
+
+    const payloadBytes = decodeBase64Url(parts[0]);
+    const payload = JSON.parse(new TextDecoder().decode(payloadBytes));
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+
+    const now = Math.floor(Date.now() / 1000);
+    const maxSessionSeconds = 4 * 60 * 60;
+    const clockSkewSeconds = 60;
+
+    if (typeof payload.sub !== "string" || !payload.sub.trim() || payload.sub.length > 100 ||
+        typeof payload.login !== "string" || !/^[a-z0-9-]{1,39}$/i.test(payload.login) ||
+        !Number.isSafeInteger(payload.iat) || !Number.isSafeInteger(payload.exp) ||
+        payload.iat > now + clockSkewSeconds ||
+        payload.exp <= now ||
+        payload.exp <= payload.iat ||
+        payload.exp - payload.iat > maxSessionSeconds) {
+      return null;
+    }
+
     return payload;
   } catch {
     return null;
