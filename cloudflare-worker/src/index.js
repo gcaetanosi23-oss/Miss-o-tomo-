@@ -450,7 +450,7 @@ export default {
     }
     if (url.pathname === "/logout" && request.method === "POST") {
       const header = request.headers.get("Authorization") || "";
-      const token = header.match(/^Bearer\\s+(.+)$/i)?.[1];
+      const token = header.match(/^Bearer\s+(.+)$/i)?.[1];
       const session = await verifyToken(token, env.SESSION_SIGNING_SECRET);
       if (!session || !env.DB || !allowedTeachers(env).includes(String(session.login).toLowerCase())) {
         return json({ error: "Sessão inválida ou expirada." }, 401, cors);
